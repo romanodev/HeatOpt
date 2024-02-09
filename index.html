@@ -21,21 +21,23 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
 
-   <!-- for splashscreen -->
-        <style>
-            #loading { outline: none; border: none; background: transparent }
-        </style>
-        <script type="module">
-            const loading = document.getElementById('loading');
-            addEventListener('py:ready', () => loading.close());
-            loading.showModal();
-        </script>
+    <!-- for splashscreen -->
+    <style>
+      #loading { outline: none; border: none; background: transparent; color:aquamarine }
+   </style>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+      const loadingDialog = document.getElementById('loading');
+      if (loadingDialog) loadingDialog.showModal(); // Open the dialog
+  });
+</script>
 
 
    </head>
   <body>
-
-
+     <dialog id="loading">
+            <h1>Loading...</h1>
+        </dialog>
  <br> 
 
   <div class="aligned"><h1>HeatOpt: Fun with topology optimization for heat transport</h1>
@@ -92,11 +94,11 @@
 
       <div id="chart"></div>
 
-              </div>
-               <br>
+      </div>
+      <br>
 
               <span style="color:green;">App. 1</span>
- <em>Specify the components of the prescribed thermal conductivity tensor. The structures are assumed to have four-fold symmetry. STL files are read by common 3D-printing software. </em>
+ <em>Specify the components of the prescribed thermal conductivity tensor. The structures are assumed to have four-fold symmetry. STL files comply with common 3D-printing software. Horizontal and vertical axes are <em>x</em> and <em>y</em>, respectively. </em>
             </div>
   <div class="col-sm-4" style="padding-left: 35px;">
     The optimization requires the sensitivity of \(g\) with respect to \( \boldsymbol \rho\),
@@ -111,7 +113,7 @@
     \frac{d \kappa_{ii}}{d \boldsymbol \rho} = \frac{\partial \kappa_{ii}}{\partial \boldsymbol \rho} -
     \mathbf{x}^T\frac{\partial \mathbf{b}}{\partial \boldsymbol \rho} + \alpha \mathbf{x}^T\frac{\partial \mathbf{A}}{\partial\boldsymbol \rho} \mathbf{x}, \,\, i \in [x,y]
     \end{equation}
-where all the partial derivatives are computed analytically. As for the optimization algorithm, we choose the <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/nme.1620240207">method of moving asymtptotes</a>, implemented in the free open-source 
+where all the partial derivatives are computed analytically. As for the optimization algorithm, we choose the <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/nme.1620240207">method of moving asymptotes</a>, implemented in the free open-source 
 software <a href="https://github.com/stevengj/nlopt">NlOpt</a>. To avoid checkerboard patterns and to enforce the final solution to be binary, we adopt <a href="https://link.springer.com/article/10.1007/s00158-013-0978-6"> filtering and projection</a>.
 Specifically, we use a conic filter and a projection parameter (commonly known as \(\beta\)) that doubles every 30 iterations.
 </div>

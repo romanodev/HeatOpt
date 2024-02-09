@@ -1,7 +1,6 @@
 
 html, body {
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 
@@ -112,3 +111,5 @@ a:active {
   background-color: transparent;
   text-decoration: underline;
 }
+
+

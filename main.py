@@ -353,11 +353,11 @@ def get_fig(x,grid):
   ax.plot([grid,grid,2*grid,2*grid,grid],[grid,2*grid,2*grid,grid,grid],color='g',ls='--',lw=3)
   ax.axis('off')
 
-  plt.arrow(-grid/2,2.8*grid,0,-10,color="#cadbde",head_width=1.5)
-  plt.arrow(-grid/2,2.8*grid,10,0,color="#cadbde",head_width=1.5)
-  plt.text(-grid/2+10,2.95*grid,'x',color="#cadbde",fontsize=16)
-  plt.text(-grid/2-3,2.4*grid,'y',color="#cadbde",fontsize=16)
-  ax.set_xlim(-grid/2-5,3*grid + grid/2+5)
+  #plt.arrow(-grid/2,2.8*grid,0,-10,color="#cadbde",head_width=1.5)
+  #plt.arrow(-grid/2,2.8*grid,10,0,color="#cadbde",head_width=1.5)
+  #plt.text(-grid/2+10,2.95*grid,'x',color="#cadbde",fontsize=16)
+  #plt.text(-grid/2-3,2.4*grid,'y',color="#cadbde",fontsize=16)
+  #ax.set_xlim(-grid/2-5,3*grid + grid/2+5)
 
   fig.tight_layout(pad=0,h_pad=0,w_pad=0)
   return fig
@@ -444,6 +444,8 @@ optimizer,grid = get_optimizer()
 
 def run(event):
 
+    document.getElementById("loading").showModal()
+
     kxx = float(document.getElementById("input_kxx").value)
     kyy = float(document.getElementById("input_kyy").value)
 
@@ -457,6 +459,7 @@ def run(event):
         display(fig, target="chart",append=False)
         display(str(round(kappa[0],3)), target="output_kxx", append=False)
         display(str(round(kappa[1],3)), target="output_kyy", append=False)
+        document.getElementById("loading").close()
 
 def download_stl(event):
     """Create structure"""
@@ -498,6 +501,8 @@ fig = get_fig(x,grid)
 display(fig, target="chart")
 display(str(round(data['kappa'][0],3)), target="output_kxx", append=False)
 display(str(round(data['kappa'][1],3)), target="output_kyy", append=False)
+
+document.getElementById("loading").close()
 
 
 setup()
