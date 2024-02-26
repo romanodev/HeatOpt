@@ -1,6 +1,6 @@
 {
      "packages" : ["numpy", "matplotlib","scipy","numpy-stl","nlopt"],
     "files": {
-    "./example.json": ""}
+    "./example.json": "","/heatopt.py": "./heatopt.py"}
 }
 
