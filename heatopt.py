@@ -111,7 +111,6 @@ def compute_kappa_and_gradient(T,rho_dep,direction,N):
       dim = 2
       [kappa_ij,P_vec,i_mat,j_mat,ii,kappad_ij,kappad_ji] = rho_dep
       #Compute kappa---
-      #kappa = np.sum(kappa_ij[ii]) - np.dot(T,P)
       kappa     = np.array([np.sum(kappa_ij[ii[i]])*direction[i] - np.dot(T,P_vec[i]) for i in range(dim)])
 
       gradient = np.zeros(N)
@@ -122,16 +121,6 @@ def compute_kappa_and_gradient(T,rho_dep,direction,N):
        np.add.at(gradient,j_mat[ii[i]],kappad_ji[ii[i]]*tmp)
 
       return np.dot(kappa,direction),gradient
-
-      #Compute gradient
-      #gradient = np.zeros(N)
-      #np.add.at(gradient,i_mat,kappad_ij*np.power(T[i_mat]-T[j_mat],2))
-      #np.add.at(gradient,i_mat[ii],kappad_ij[ii]*(1-2*(T[i_mat[ii]]-T[j_mat[ii]])))
-      #np.add.at(gradient,j_mat[ii],kappad_ji[ii]*(1+2*(T[j_mat[ii]]-T[i_mat[ii]])))
-
-      #return kappa,gradient
-
-
 
 
 def get_grid(N):
@@ -192,8 +181,6 @@ def get_grid(N):
 
 
 
-
-
 def conic_filter_2D(centroids,R):
 
     N = np.array(np.sqrt(len(centroids)),int)
@@ -230,8 +217,6 @@ def get_mapping(grid,R):
 
     proj_numpy_jac = beta*(1-np.power(np.tanh(beta*(xt-eta)),2))/(np.tanh(beta*eta) + np.tanh(beta*(1-eta)))
    
-    #gp = np.einsum('ijlk,ij->ijlk',gt,proj_numpy_jac).reshape((N,N)) 
-
     gp = np.einsum('ij,i->ij',gt2,proj_numpy_jac)
 
     return xp,gp
@@ -363,14 +348,7 @@ def get_optimizer():
  maxiter.append(1)
  betas.append(1e24)
 
- #BTE is slow.
  f = fourier(grid=grid)
- #b = bte(grid=grid,Knt=1,n_phi=48,directions=[[1,0],[0,1]])
- #x = np.random.rand(int(N/4)).reshape((int(grid/2),int(grid/2)))
- #x = np.concatenate((x,np.fliplr(x)),axis=1)
- #x = np.concatenate((x,np.flipud(x)),axis=0).flatten()
-
- 
 
  mapping = get_mapping(grid,R=R)
 
