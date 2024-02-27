@@ -46,7 +46,7 @@ import matplotlib.pylab as plt
 optimizer,grid = get_optimizer()
 
 kappa,fig,x = optimizer(0.1,0.2,-0.04)
-
+#Always check if the final kappa is close to the prescribed one
 print(kappa)
 
 with open('structure.stl','w') as f:
