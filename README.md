@@ -2,6 +2,16 @@
 
 HeatOpt is a "computational paper" showcasing a heat transport topology optimization solver accompanied by technical details. 
 
+The main goal is to optimize a material with a prescribed effective thermal conductivity tensor of the form
+
+$$\kappa = \begin{pmatrix}
+\kappa_{xx} & 
+\kappa_{xy} \\
+\kappa_{yx} & 
+\kappa_{xy}
+\end{pmatrix}.$$
+
+
 The engine is written in Python and is based on [PyScript](https://pyscript.net/)
 
 Author: Giuseppe Romano (romanog@mit.edu)
@@ -17,6 +27,8 @@ pip install -r requirements.txt
 
 python heatopt.py
 ```
+
+
 
 
 
