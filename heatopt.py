@@ -106,18 +106,33 @@ def get_fig(x,grid):
   return fig
 
 
-def compute_kappa_and_gradient(T,rho_dep,N):
+def compute_kappa_and_gradient(T,rho_dep,direction,N):
 
-      [kappa_ij,P,i_mat,j_mat,ii,kappad_ij,kappad_ji] = rho_dep
+      dim = 2
+      [kappa_ij,P_vec,i_mat,j_mat,ii,kappad_ij,kappad_ji] = rho_dep
       #Compute kappa---
-      kappa = np.sum(kappa_ij[ii]) - np.dot(T,P)
-      #Compute gradient
+      #kappa = np.sum(kappa_ij[ii]) - np.dot(T,P)
+      kappa     = np.array([np.sum(kappa_ij[ii[i]])*direction[i] - np.dot(T,P_vec[i]) for i in range(dim)])
+
       gradient = np.zeros(N)
       np.add.at(gradient,i_mat,kappad_ij*np.power(T[i_mat]-T[j_mat],2))
-      np.add.at(gradient,i_mat[ii],kappad_ij[ii]*(1-2*(T[i_mat[ii]]-T[j_mat[ii]])))
-      np.add.at(gradient,j_mat[ii],kappad_ji[ii]*(1+2*(T[j_mat[ii]]-T[i_mat[ii]])))
+      for i in range(dim):
+       tmp      = direction[i]**2 + 2*direction[i]*(T[j_mat[ii[i]]]-T[i_mat[ii[i]]])   
+       np.add.at(gradient,i_mat[ii[i]],kappad_ij[ii[i]]*tmp)
+       np.add.at(gradient,j_mat[ii[i]],kappad_ji[ii[i]]*tmp)
 
-      return kappa,gradient
+      return np.dot(kappa,direction),gradient
+
+      #Compute gradient
+      #gradient = np.zeros(N)
+      #np.add.at(gradient,i_mat,kappad_ij*np.power(T[i_mat]-T[j_mat],2))
+      #np.add.at(gradient,i_mat[ii],kappad_ij[ii]*(1-2*(T[i_mat[ii]]-T[j_mat[ii]])))
+      #np.add.at(gradient,j_mat[ii],kappad_ji[ii]*(1+2*(T[j_mat[ii]]-T[i_mat[ii]])))
+
+      #return kappa,gradient
+
+
+
 
 def get_grid(N):
 
@@ -260,8 +275,21 @@ def get_aux(rho,i_mat,j_mat,ind_extremes):
 def fourier(**options):
     """Fourier Solver"""
 
+    #Directions---
+    #phi = [0,np.pi/2]
+    #directions = np.array([np.cos(phi),np.sin(phi)]).T
+    #Ainv = np.array([[1,0],[0,1]])
+
+    #This is needed in order to get the whole tensor
+    A = np.array([[1,0,0],[0,1,0],[0.5,0.5,1]])
+    Ainv = np.linalg.inv(A)
+    phi = [0,np.pi/2,np.pi/4]
+    directions = np.array([np.cos(phi),np.sin(phi)]).T
+
+
+
     direct = False
-    directions =options['directions']
+    #directions =options['directions']
     n_dir,dim = np.array(directions).shape
     grid        = options['grid']
     if dim == 3:
@@ -275,6 +303,7 @@ def fourier(**options):
     i_mat       = aux['i']
     j_mat       = aux['j']
     ind_extremes = aux['ind_extremes'] 
+    ii = [ind_extremes[i,1]  for i in range(dim)]
 
     #For direct
     row = np.hstack((i_mat,np.arange(N))) 
@@ -302,21 +331,19 @@ def fourier(**options):
 
       P = np.einsum('i,ic->c',direction,P_vec)   
      
-      if direction == [1,0]:
-         ii = ind_extremes[0,1]
+      rho_dep = [kappa_ij,P_vec,i_mat,j_mat,ii,kappad_ij,kappad_ji]
 
-      if direction == [0,1]:
-         ii = ind_extremes[1,1]
-
-      rho_dep = [kappa_ij,P,i_mat,j_mat,ii,kappad_ij,kappad_ji]
-
-      kappa_and_gradient =  partial(compute_kappa_and_gradient,rho_dep=rho_dep,N=N)
+      kappa_and_gradient =  partial(compute_kappa_and_gradient,rho_dep=rho_dep,N=N,direction=direction)
 
       #DIRECT-----------------------------------------
       P[12] = 0 
       T_mat  = lu.solve(np.array(P))
       kappa[n],jacobian[n] = kappa_and_gradient(T_mat)
       #-------------------------------------------------
+
+     
+     kappa    = np.matmul(Ainv,kappa)
+     jacobian = np.einsum('ji,ik->jk',Ainv,jacobian)
 
      return kappa,jacobian
 
@@ -337,35 +364,38 @@ def get_optimizer():
  betas.append(1e24)
 
  #BTE is slow.
- f = fourier(grid=grid,directions=[[1,0],[0,1]])
+ f = fourier(grid=grid)
  #b = bte(grid=grid,Knt=1,n_phi=48,directions=[[1,0],[0,1]])
- x = np.random.rand(int(N/4)).reshape((int(grid/2),int(grid/2)))
- x = np.concatenate((x,np.fliplr(x)),axis=1)
- x = np.concatenate((x,np.flipud(x)),axis=0).flatten()
+ #x = np.random.rand(int(N/4)).reshape((int(grid/2),int(grid/2)))
+ #x = np.concatenate((x,np.fliplr(x)),axis=1)
+ #x = np.concatenate((x,np.flipud(x)),axis=0).flatten()
+
  
 
  mapping = get_mapping(grid,R=R)
 
  counts = [0]
- def optimize(kxx,kyy):
+ def optimize(*kd):
  
-  kd = np.array([kxx,kyy])   
-  kappa = np.zeros(2)
+  kd = np.array(kd)  
+  n_dir = len(kd)
+  kappa = np.zeros_like(kd)
   def func(x,grad,beta):
    counts[0] +=1   
    x,gp =  mapping(x,beta)
    kappa[:],jacobian = f(x)
    g = np.linalg.norm(kappa-kd)
    jacobian = np.einsum('ik,kl->il',jacobian,gp)
-   grad[:]  = 1/g*((kappa[0]-kd[0])*jacobian[0]  + (kappa[1]-kd[1])*jacobian[1])
+   
+   grad[:] = np.zeros(N)
+   for i in range(n_dir):
+    grad[:]  += 1/g*((kappa[i]-kd[i])*jacobian[i])
+
    return g
 
   opt = nlopt.opt(nlopt.LD_CCSAQ,N)
 
-  #make a symmetrical first guess
-  x = np.random.rand(int(N/4)).reshape((int(grid/2),int(grid/2)))
-  x = np.concatenate((x,np.fliplr(x)),axis=1)
-  x = np.concatenate((x,np.flipud(x)),axis=0).flatten()
+  x = np.load('x',allow_pickle=True)
   #---------------------
   total_count = 0
   for miter,beta in zip(*(maxiter,betas)):
@@ -404,9 +434,11 @@ if __name__ == '__main__':
 
  optimizer,grid = get_optimizer()
 
- kappa,fig,x = optimizer(0.1,0.2)
+ kappa,fig,x = optimizer(0.1,0.2,-0.05)
+
+ print(kappa)
 
  with open('structure.stl','w') as f:
   f.write(create_stl(x))
 
- #plt.show()
+ plt.show()
