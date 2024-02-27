@@ -20,7 +20,7 @@ warnings.simplefilter('ignore',SparseEfficiencyWarning)
 
 
 
-def create_stl(x):
+def write_stl(x):
 
  x = np.array(x)   
 
@@ -408,15 +408,3 @@ def get_optimizer():
  return optimize,grid
 
 
-if __name__ == '__main__':
-
- optimizer,grid = get_optimizer()
-
- kappa,fig,x = optimizer(0.1,0.2,-0.05)
-
- print(kappa)
-
- with open('structure.stl','w') as f:
-  f.write(create_stl(x))
-
- plt.show()
