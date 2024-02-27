@@ -395,7 +395,7 @@ def get_optimizer():
 
   opt = nlopt.opt(nlopt.LD_CCSAQ,N)
 
-  x = np.load('x',allow_pickle=True)
+  x = np.random.rand(N)
   #---------------------
   total_count = 0
   for miter,beta in zip(*(maxiter,betas)):
