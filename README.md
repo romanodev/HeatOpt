@@ -8,7 +8,15 @@ Author: Giuseppe Romano (romanog@mit.edu)
 
 Computational Paper: [Link](https://romanodev.github.io/HeatOpt/)
 
+To run HeatOpt as a stand-alone program, run the following code
 
+```bash
+python -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+
+python heat_opt.py
+```
 
 
 
