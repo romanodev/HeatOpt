@@ -1,6 +1,6 @@
 from js import Blob, document, URL
 from pyscript import document
-from heatopt import get_optimizer,create_stl,get_fig
+from heatopt import get_optimizer,write_stl,get_fig
 from pyscript import display
 import json
 
