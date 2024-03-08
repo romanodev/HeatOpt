@@ -55,6 +55,9 @@ with open('structure.stl','w') as f:
 plt.savefig('structure.png')
 plt.show()
 ```
+Note that the thermal conductivity for the base material is 1 W/m/K. 
+
+
 
 ![Alt text](structure.png)
 
