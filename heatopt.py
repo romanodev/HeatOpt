@@ -395,7 +395,6 @@ def get_optimizer():
   #Prune structure--- 
   a = f(x)
   gradient_norm = np.linalg.norm(a[1],axis=0)
-  #print(np.sort(gradient_norm)[:30])
   x[gradient_norm < 1e-8] = 0
   #------------------
 
