@@ -1,0 +1,3 @@
+name = "Hello World"
+description = "Basic hello world example that displays text in a page with PyScript."
+
