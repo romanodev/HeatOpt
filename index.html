@@ -41,9 +41,9 @@
     </head>
 
     <body>
-        <dialog id="loading">
+        <!--<dialog id="loading">
             <h1>Loading...</h1>
-        </dialog>
+        </dialog>-->
 
         <br> 
 
@@ -146,15 +146,16 @@ Specifically, we use a conic filter and a projection parameter (commonly known a
 <section class="pyscript">
     Hello world! <br />
     This is the current date and time, as computed by Python:
-    <script type="py">
+    <!--<script type="py">
         from pyscript import display
         from datetime import datetime
         now = datetime.now()
         display(now.strftime("%m/%d/%Y, %H:%M:%S"))
-    </script>
+    </script>-->
+    <script type="py" src="./main.py" config="pyscript.json"></script>
 </section>
 
-    <!--  <script type="py" src="./main.py" config="pyscript.json"></script>-->  
+
     
     </body>
 </html>
