@@ -60,5 +60,7 @@ if __name__ =='__main__':
  display(fig, target="chart")
  display(str(round(data['kappa'][0],3)), target="output_kxx", append=False)
  display(str(round(data['kappa'][1],3)), target="output_kyy", append=False)
+ display('0', target="output_kyy", append=False)
+
 
 
