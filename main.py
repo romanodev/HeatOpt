@@ -88,7 +88,7 @@ optimizer,grid = get_optimizer()
 
 def run(event):
 
-    document.getElementById("loading").showModal()
+    #document.getElementById("loading").showModal()
 
     kxx = float(document.getElementById("input_kxx").value)
     kyy = float(document.getElementById("input_kyy").value)
@@ -106,7 +106,7 @@ def run(event):
          display(str(round(kappa[0],3)), target="output_kxx", append=False)
          display(str(round(kappa[1],3)), target="output_kyy", append=False)
          display(str(round(kappa[2],3)), target="output_kxy", append=False)
-         document.getElementById("loading").close()
+         #document.getElementById("loading").close()
 
 def download_stl(event):
     """Create structure"""
