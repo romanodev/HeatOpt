@@ -41,115 +41,51 @@
     </head>
 
     <body>
-        <dialog id="loading">
-            <h1>Loading...</h1>
-        </dialog>
-
+        
         <br> 
 
-  <div class="aligned"><h1>HeatOpt: Fun with topology optimization for heat transport</h1>
-	    <p> Giuseppe Romano </p>  
-      <p> Massachusetts Institute of Technology</p>  
-      <p> romanog@mit.edu,  <a href="https://github.com/romanodev/HeatOpt">Code</a></p>  
-  </div>
-  <hr color="#cadbde">
+        <div class="container">
+            <div class="row">
+                <!-- Inputs and Buttons Column -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="input_kxx">Desired \(\kappa_{xx}\) [0.1,0.9]:</label>
+                        <input type="text" id="input_kxx" name="fname" value="0.300" maxlength="5" size="5" class="form-control">
+                        <label for="kxx_optimized">Actual \(\kappa_{xx}\):</label>
+                        <span id="output_kxx" name="kxx_optimized" style="color:green;"></span>
+                    </div>
 
+                    <div class="form-group">
+                        <label for="input_kyy">Desired \(\kappa_{yy}\) [0.1,0.9]:</label>
+                        <input type="text" id="input_kyy" name="lname" value="0.200" maxlength="5" size="5" class="form-control">
+                        <label for="kyy_optimized">Actual \(\kappa_{yy}\):</label>
+                        <span id="output_kyy" name="kyy_optimized" style="color:green;"></span>
+                    </div>
 
-  
-  <div class="row">
-       
-    <div class="col-sm-4" style="padding-left: 35px;">
-      
-      The ability of a material to conduct heat depends on its geometry and chemical composition. In infinite systems, this property is described 
-      by the bulk thermal conductivity tensor, \( \kappa \). In non-homogenous materials the <em> effective </em> thermal conductivity tensor,
-       \( \kappa_{\mathrm{eff}} \), is computed by solving Fourier's law and the steady-state continuity equation,
-      
-      \begin{equation}\label{eq:fourier}
-      \nabla \cdot \left[\kappa_{\mathrm{bulk}} \nabla T(\mathbf{r}) \right] = 0.
-      \end{equation} 
-      
-    In practice, given a geometry, \( \kappa_{\mathrm{eff}} \) is evaluated by solving Eq. \eqref{eq:fourier} for different directions
-     of the applied temperature gradient. Once Eq. \eqref{eq:fourier} is discretized in space (here we use the <a href="https://link.springer.com/article/10.1007/s00158-005-0584-3">finite-volume method</a>), it can be casted into the linear equation
-      \(\mathbf{A} \mathbf{x}= \mathbf{b}\). Finally, the effective thermal conductivity is obtained by
-       \(\kappa = \alpha +  \mathbf{b}^T \mathbf{A}^{-1}\mathbf{b} \), with \(\alpha \) a normalization constant.
-     
-     In this App, we are interested in <em>inverse design</em>, i.e. the identification of a material 
-     with a prescribed thermal conductivity, \( \tilde{\kappa} \). To this end, we adopt a <a href="https://link.springer.com/article/10.1007/s00158-013-0978-6"> density-based topology optimization</a> approach, where a material
-     is described in terms of <em>pixels</em> and a fictitious density, \( \boldsymbol \rho\). The optimization algorithm reads
-     \begin{eqnarray}\label{eq:opt}
-     \min_{\boldsymbol \rho} g(\boldsymbol \rho) \nonumber \\
-    0\le \boldsymbol \rho \le 1 
-    \end{eqnarray}
-    Where the cost function is the Frobenius norm \(g(\boldsymbol \rho)  = ||\kappa-  \tilde{\kappa}||\).
-    
-    </div>
+                    <div class="form-group">
+                        <label for="input_kxy">Desired \(\kappa_{xy}\) [-0.2,0.2]:</label>
+                        <input type="text" id="input_kxy" name="lname" value="0.000" maxlength="5" size="5" class="form-control">
+                        <label for="kxy_optimized">Actual \(\kappa_{xy}\):</label>
+                        <span id="output_kxy" name="xt_optimized" style="color:green;"></span>
+                    </div>
 
-    <div class="col-sm-4" style="padding-left: 35px;">
- 
-        <div  class='center'>
-          
-    
-        <button type= "button" id="run" py-click="run">Run</button>
-        <button type= "button" id="download_stl" py-click="download_stl">DOWNLOAD STL</button>
-    
-    
-          <br>
-          <br>
+                    <!-- Buttons -->
+                    <div class="mt-4">
+                        <button id="run_button"  id="run" class="btn btn-primary btn-block" py-click="run">Run</button>
+                        <button id="stl_button" id="download_stl" class="btn btn-secondary btn-block" py-click="download_stl">Generate STL</button>
 
-    <label for="fname">Desired \(\kappa_{xx}\) [0.1,0.9]:</label>
-    <input type="text" id="input_kxx" name="fname" value="0.300"  maxlength="5" size="5">
-     <label for="kxx_optimized">Actual \(\kappa_{xx}\):</label>
-     <span type="text" id="output_kxx" name="kxx_optimized"  style="color:green;">   </span>  <br> 
+                    </div>
+                </div>
 
-    <label for="lname">Desired \(\kappa_{yy}\) [0.1,0.9]</label>
-    <input type="text" id="input_kyy" name="lname" value="0.200"  maxlength="5"size="5" >
-     <label for="kyy_optimized">Actual \(\kappa_{yy}\):</label>
-     <span type="text" id="output_kyy" name="kyy_optimized"  style="color:green;">   </span> <br>     
+                <!-- Chart Column -->
+                <div class="col-md-8">
+                    <div id="chart"></div>
+                </div>
+            </div>
+        </div>
 
-     <label for="lname">Desired \(\kappa_{xy}\) [-0.2,0.2]</label>
-     <input type="text" id="input_kxy" name="lname" value="0.000"  maxlength="5"size="5" >  
-     <label for="kxy_optimized">Actual \(\kappa_{xy}\):</label>
-     <span type="text" id="output_kxy" name="xt_optimized"  style="color:green;">   </span> <br>     
-
-
-     <br>
-     <div id="chart"></div>
-
-    
-     <span style="color:green;">App. 1</span>
-<em>Specify the components of the prescribed thermal conductivity tensor. The structures are assumed to have four-fold symmetry. STL files comply with common 3D-printing software. Horizontal and vertical axes are <em>x</em> and <em>y</em>, respectively. </em>
-   </div>
-   </div>
-   
-<div class="col-sm-4" style="padding-left: 35px;">
-The optimization requires the sensitivity of \(g\) with respect to \( \boldsymbol \rho\),
-\begin{equation}
-\frac{\partial g }{\partial \mathbf{\rho} } = \frac{1}{g}\left[\Delta \kappa_{xx}\frac{\partial \Delta \kappa_{xx}}{\partial \boldsymbol \rho}+\Delta \kappa_{yy}\frac{\partial \Delta \kappa_{yy}}{\partial \boldsymbol \rho} \right],
-\end{equation}
-where \(\Delta \kappa_{ii} = \tilde{\kappa}_{ii} - \kappa_{ii} \). To proceed with optimization, we thus need to evaluate \(\frac{\partial \kappa_{ii}}{\partial \boldsymbol \rho} \).
-To this end, we use the <a href="https://math.mit.edu/~stevenj/18.336/adjoint.pdf">adjoint</a> method, which is derived by differentiating analytically the linear system mentioned above with respect to \( \boldsymbol \rho \). 
-As a result, the gradient can be computed by solving just an additional linear system, which is the adjoint of the original one. As detailed <a href="https://arxiv.org/abs/2202.05251">here</a>, in our case the adjoint solution is simply the solution of the original one with minus sign.
-The resulting gradient is
-\begin{equation} 
-\frac{d \kappa_{ii}}{d \boldsymbol \rho} = \frac{\partial \kappa_{ii}}{\partial \boldsymbol \rho} -
-\mathbf{x}^T\frac{\partial \mathbf{b}}{\partial \boldsymbol \rho} + \alpha \mathbf{x}^T\frac{\partial \mathbf{A}}{\partial\boldsymbol \rho} \mathbf{x}, \,\, i \in [x,y]
-\end{equation}
-where all the partial derivatives are computed analytically. As for the optimization algorithm, we choose the <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/nme.1620240207">method of moving asymptotes</a>, implemented in the free open-source 
-software <a href="https://github.com/stevengj/nlopt">NlOpt</a>. To avoid checkerboard patterns and to enforce the final solution to be binary, we adopt <a href="https://link.springer.com/article/10.1007/s00158-013-0978-6"> filtering and projection</a>.
-Specifically, we use a conic filter and a projection parameter (commonly known as \(\beta\)) that doubles every 30 iterations.
-</div>
-
-</div>
-</div>
-<hr color="#cadbde">
-<section class="pyscript">
-   
-    <script type="py" src="./main.py" config="./pyscript.json"></script> 
-
-    
-</section>
-
-
-    
+        <section class="pyscript">
+            <script type="py" src="./main.py" config="./pyscript.json"></script> 
+        </section>
     </body>
 </html>
