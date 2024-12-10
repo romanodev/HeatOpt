@@ -11,8 +11,12 @@ import matplotlib.pylab as plt
 from stl import mesh,Mode
 from  io import BytesIO
 import matplotlib as mpl
+import scipy.sparse.linalg as spla
+import time
+import numpy.ma as ma
+import json
 
-mpl.rcParams['toolbar'] = 'None'
+#mpl.rcParams['toolbar'] = 'None'
 
 from scipy.sparse import (spdiags, SparseEfficiencyWarning, csc_matrix,
     csr_matrix, isspmatrix, dok_matrix, lil_matrix, bsr_matrix)
@@ -20,7 +24,79 @@ warnings.simplefilter('ignore',SparseEfficiencyWarning)
 
 
 
-def write_stl(x):
+# def write_stl(x):
+
+#  x = np.array(x)   
+
+#  N = len(x)
+#  Ns = int(np.sqrt(N))
+#  x =x.reshape((Ns,Ns))
+
+#  #Make it periodic--
+#  x = np.pad(x,Ns,mode='wrap')
+
+#  N2 = 3*Ns
+
+#  vertices = []
+#  faces    = []
+
+#  for i, j in product(range(N2+1),range(N2+1)):
+#      vertices.append([i,j,0])
+#  for i, j in product(range(N2+1),range(N2+1)):
+#      vertices.append([i,j,1])
+
+#  def add_pixel(i,j):
+#     v  = [] 
+#     v.append(i*(N2+1)+j)
+#     v.append((i+1)*(N2+1)+j)
+#     v.append((i+1)*(N2+1)+j+1)
+#     v.append(i*(N2+1)+j+1)
+#     v.append(i*(N2+1)+j + (N2+1)*(N2+1))
+#     v.append((i+1)*(N2+1)+j + (N2+1)*(N2+1))
+#     v.append((i+1)*(N2+1)+j+1 + (N2+1)*(N2+1))
+#     v.append(i*(N2+1)+j+1 + (N2+1)*(N2+1))
+   
+
+#     faces.append([v[0],v[3],v[1]])
+#     faces.append([v[1],v[3],v[2]])
+#     faces.append([v[0],v[4],v[7]])
+#     faces.append([v[0],v[7],v[3]])
+#     faces.append([v[4],v[5],v[6]])
+#     faces.append([v[4],v[6],v[7]])
+#     faces.append([v[5],v[1],v[2]])
+#     faces.append([v[5],v[2],v[6]])
+#     faces.append([v[2],v[3],v[6]])
+#     faces.append([v[3],v[7],v[6]])
+#     faces.append([v[0],v[1],v[5]])
+#     faces.append([v[0],v[5],v[4]])
+
+
+#  for i,j in zip(*x.nonzero()):
+#   add_pixel(i,j)    
+
+#  faces    = np.array(faces)
+#  vertices = np.array(vertices)
+
+#  T = 4
+#  vertices[:,2] *=T
+
+
+#  # Create the mesh
+#  cube = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+#  for i, f in enumerate(faces):
+#     for j in range(3):
+#         cube.vectors[i][j] = vertices[f[j],:]
+
+#  output = BytesIO()
+#  cube.save('TopOpt',fh=output,mode=Mode.ASCII)
+
+#  # Write the mesh to file "cube.stl"
+#  return output.getvalue().decode("utf-8") 
+
+
+
+
+def create_stl(x):
 
  x = np.array(x)   
 
@@ -90,19 +166,43 @@ def write_stl(x):
  return output.getvalue().decode("utf-8") 
 
 
+def get_fig(x,grid,J):
 
-def get_fig(x,grid):
+  x = np.where(x>0.5,1,0).reshape((grid,grid))
+  
+  data = np.linalg.norm(J,axis=(0,1)).reshape((grid,grid))
+ 
+  mask = x==0
+  mask = np.pad(mask.T,grid,mode='wrap')
 
-  cmap = ListedColormap(["#cadbde","#404040"])
+  data = np.pad(data.T,grid,mode='wrap')
+
+  data =  ma.array(data,mask=mask)
+  
+  #cmap = ListedColormap(["#cadbde","#404040"])
+  cmap = 'viridis'
 
   if type(x) == list: x = np.array(x)  
   fig  = plt.figure(facecolor='#404040')
   ax   = fig.add_subplot(111)
-  ax.imshow(1-np.pad(x.reshape((grid,grid)).T,grid,mode='wrap'),vmin=0,vmax=1,cmap=cmap,animated=True)
-  ax.plot([grid,grid,2*grid,2*grid,grid],[grid,2*grid,2*grid,grid,grid],color='g',ls='--',lw=3)
+  #ax.imshow(1-np.pad(x.reshape((grid,grid)).T,grid,mode='wrap'),vmin=0,vmax=1,cmap=cmap,animated=True)
+
+  data -= data.min()
+  data /=data.max()
+  im = ax.imshow(data,cmap=cmap,animated=True,vmin=0,vmax=1)
+  ax.plot([grid,grid,2*grid,2*grid,grid],[grid,2*grid,2*grid,grid,grid],color='white',ls='--',lw=2)
   ax.axis('off')
 
+  # Add a colorbar at the bottom
+  cbar = fig.colorbar(im, ax=ax, orientation='horizontal', fraction=0.046, pad=0.04)
+  cbar.set_label('Magnitude of Heat Flux (Normalized)',color='white')
+  cbar.ax.xaxis.set_tick_params(color='white')
+  cbar.ax.tick_params(labelcolor='white')
+  cbar.outline.set_edgecolor('none')
+  
+
   fig.tight_layout(pad=0,h_pad=0,w_pad=0)
+
   return fig
 
 
@@ -253,7 +353,7 @@ def get_aux(rho,i_mat,j_mat,ind_extremes):
       np.add.at(P_vec,(i,i_mat[ii]), kappa_ij[ii])
       np.add.at(P_vec,(i,j_mat[ii]),-kappa_ij[ii])
 
-     return data,i,j,kappa_ij,kappad_ij,kappad_ji,P_vec
+     return data,i,j,kappa_ij,kappad_ij,kappad_ji,P_vec,kappa_map
 
 
 
@@ -289,6 +389,7 @@ def fourier(**options):
     j_mat       = aux['j']
     ind_extremes = aux['ind_extremes'] 
     ii = [ind_extremes[i,1]  for i in range(dim)]
+    normals = aux['normals']
 
     #For direct
     row = np.hstack((i_mat,np.arange(N))) 
@@ -296,7 +397,7 @@ def fourier(**options):
 
     def func(rho):
      
-     data,i,j,kappa_ij,kappad_ij,kappad_ji,P_vec = get_aux(rho,i_mat,j_mat,ind_extremes)
+     data,i,j,kappa_ij,kappad_ij,kappad_ji,P_vec,kappa_map = get_aux(rho,i_mat,j_mat,ind_extremes)
 
      aux = kappa_ij,i_mat,j_mat
 
@@ -312,43 +413,86 @@ def fourier(**options):
      #---------------------------------------
      kappa     = np.zeros(n_dir)
      jacobian  = np.zeros((n_dir,N))
+    
+
+     P =  np.einsum('di,ic->cd',directions,P_vec)   
+     P[12,:] = 0 
+     T_mat  = lu.solve(P)
+     #print(T_mat.shape)
+     #quit()
+
+     rho_dep = [kappa_ij,P_vec,i_mat,j_mat,ii,kappad_ij,kappad_ji]
+
+     #This needs to be vectorized
+    
      for n,direction in enumerate(directions):
-
-      P = np.einsum('i,ic->c',direction,P_vec)   
-     
-      rho_dep = [kappa_ij,P_vec,i_mat,j_mat,ii,kappad_ij,kappad_ji]
-
       kappa_and_gradient =  partial(compute_kappa_and_gradient,rho_dep=rho_dep,N=N,direction=direction)
-
-      #DIRECT-----------------------------------------
-      P[12] = 0 
-      T_mat  = lu.solve(np.array(P))
-      kappa[n],jacobian[n] = kappa_and_gradient(T_mat)
-      #-------------------------------------------------
+      kappa[n],jacobian[n] = kappa_and_gradient(T_mat[:,n])
 
      
      kappa    = np.matmul(Ainv,kappa)
+     #print(kappa)
      jacobian = np.einsum('ji,ik->jk',Ainv,jacobian)
 
-     return kappa,jacobian
+     return kappa,jacobian,T_mat
+
+    
+    def compute_flux(rho,T_mat):
+      
+     data,i,j,kappa_ij,kappad_ij,kappad_ji,P_vec,kappa_map = get_aux(rho,i_mat,j_mat,ind_extremes)
+
+     J = np.zeros((n_dir,2,N))
+
+     for n,direction in enumerate(directions):
+      
+      #Flux-----------------------------
+      #Bulk
+      T_boundary       = (T_mat[i_mat,n]*kappa_map[i_mat] + T_mat[j_mat,n]*kappa_map[j_mat])/(kappa_map[i_mat]+kappa_map[j_mat]) 
+      contribution_i   = np.einsum('s,sd->sd',T_boundary*kappa_map[i_mat],normals)
+      contribution_j   = np.einsum('s,sd->sd',T_boundary*kappa_map[j_mat],normals)
+      np.add.at(J[n,0],i_mat,-contribution_i[:,0])
+      np.add.at(J[n,1],i_mat,-contribution_i[:,1])
+      np.add.at(J[n,0],j_mat,contribution_j[:,0])
+      np.add.at(J[n,1],j_mat,contribution_j[:,1])
+
+     
+      #Periodic
+
+      for i in range(dim):
+       ii  = ind_extremes[i,1]
+
+       contribution = direction[i]*np.einsum('s,sd->sd',kappa_ij[ii],normals[ii])
+      
+       np.add.at(J[n,0],i_mat[ii],-contribution[:,0])
+       np.add.at(J[n,1],i_mat[ii],-contribution[:,1])
+       np.add.at(J[n,0],j_mat[ii],-contribution[:,0])
+       np.add.at(J[n,1],j_mat[ii],-contribution[:,1])
+
+
+
+     return J 
+    
+  #---------------------------------------------------------------
+
+
 
    
-    return func
+    return func,compute_flux
 
 
 def get_optimizer():
 
  nb = 14
  mm = 30
- R  = 0.05
- grid    = 36  #Grid resolution
+ R  = 0.1
+ grid    = 40  #Grid resolution
  N = grid**2
  betas = [2**(n+1) for n in range(nb)]
  maxiter = [mm]*nb
  maxiter.append(1)
  betas.append(1e24)
 
- f = fourier(grid=grid)
+ f,get_flux = fourier(grid=grid)
 
  mapping = get_mapping(grid,R=R)
 
@@ -359,10 +503,11 @@ def get_optimizer():
   n_dir = len(kd)
   kappa = np.zeros_like(kd)
 
+  T_mat = np.zeros((N,n_dir))
   def func(x,grad,beta):
    counts[0] +=1   
    x,gp =  mapping(x,beta)
-   kappa[:],jacobian = f(x)
+   kappa[:],jacobian,T_mat[:,:] = f(x)
    g = np.linalg.norm(kappa-kd)
    jacobian = np.einsum('ik,kl->il',jacobian,gp)
    
@@ -375,6 +520,8 @@ def get_optimizer():
   opt = nlopt.opt(nlopt.LD_CCSAQ,N)
 
   x = np.random.rand(N)
+  #x.dump('x')
+  #x = np.load('x',allow_pickle=True)
   #---------------------
   total_count = 0
   for miter,beta in zip(*(maxiter,betas)):
@@ -396,14 +543,18 @@ def get_optimizer():
   #Prune structure--- 
   a = f(x)
   gradient_norm = np.linalg.norm(a[1],axis=0)
-  x[gradient_norm < 1e-8] = 0
+  x[gradient_norm < 1e-7] = 0
   #------------------
 
-  fig = get_fig(x,grid)
+
+  J = get_flux(x,T_mat)
+  
+
+  fig = get_fig(x,grid,J)
 
   #print('total_count')
   #print(total_count)
-  return kappa,fig,x
+  return kappa,fig,x,J
 
  return optimize,grid
 
@@ -411,8 +562,19 @@ def get_optimizer():
 
 if __name__ =='__main__':
 
- optimizer,grid = get_optimizer()
+ optimizer,grid= get_optimizer()
 
- kappa,fig,x = optimizer(0.2,0.2,0.)
+ kappa,fig,x,J = optimizer(0.2,0.2,-0.05)
 
- print(x)
+ #Save the json file
+ print(kappa)
+ data = {'kappa':kappa.tolist(),'x':x.tolist(),'J':J.tolist()}
+
+ with open('example.json','w') as f:
+    json.dump(data,f)
+
+ plt.ioff()
+ plt.show()
+ 
+
+ #print(x)
