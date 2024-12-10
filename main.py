@@ -25,7 +25,7 @@ def run(event):
       if kyy > 0.0 and kyy < 1.0:
         if kxy > -0.1 and kxy < 0.1:
          
-         kappa,fig,x = optimizer(kxx,kyy,kxy)
+         kappa,fig,x,J = optimizer(kxx,kyy,kxy)
          structure[:] = x
          display(fig, target="chart",append=False)
          display(str(round(kappa[0],3)), target="output_kxx", append=False)
