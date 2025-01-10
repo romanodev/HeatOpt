@@ -11,6 +11,28 @@ $$\kappa = \begin{pmatrix}
 \kappa_{xy}
 \end{pmatrix}.$$
 
+The tensor is reconstructed by running three separate simulations, one for each direction of the applied temperature gradient. The thermal conductivity along a given direction $$\mathbf{\hat{n}}$$ is given by $$\kappa(\mathbf{\hat{n}}) = \mathbf{\hat{n}}^T\kappa \mathbf{\hat{n}} = n_x^2 \kappa_{xx}+ n_y^2 \kappa_{yy} + 2n_xn_y\kappa_{xy}$$.
+
+We solve the heat conduction for the directions $$\mathbf{\hat{n}}_0 = \mathbf{\hat{x}}$$ , $$\mathbf{\hat{n}}_1 = \mathbf{\hat{y}}$$ , and $$\mathbf{\hat{n}}_2 = \sqrt{2}/2  \mathbf{\hat{x}} + \sqrt{2}/2  \mathbf{\hat{y}}  $$, leading to the linear system
+
+```math
+   \begin{bmatrix}
+            \kappa_{xx}  \\
+            \kappa_{yy} \\
+            \kappa_{xy}  \\
+          \end{bmatrix}   = \begin{bmatrix}
+            1 & 0 & 0 \\
+            0 & 1 & 0 \\
+            -1/2 & -1/2 & 1 \\
+          \end{bmatrix}
+\begin{bmatrix}
+            \kappa_0  \\
+            \kappa_1 \\
+            \kappa_2  \\
+          \end{bmatrix} 
+```
+
+
 
 The engine is written in Python and is based on [PyScript](https://pyscript.net/)
 
